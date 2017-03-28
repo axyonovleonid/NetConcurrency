@@ -12,7 +12,7 @@ public class Client {
         int port = Integer.parseInt(args[1]);
 
         try {
-            if(port < 0) throw new IllegalArgumentException(args[0]);
+            if(port < 0) throw new IllegalArgumentException(args[1]);
 
             Socket socket = new Socket(host, port);
 
