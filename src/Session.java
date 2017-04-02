@@ -14,9 +14,12 @@ public class Session implements Runnable {
         this.id = id;
     }
 
+    public int getId () {
+        return id;
+    }
+
     @Override
     public void run() {
-        System.out.println("Client #" + this.id + " has connected");
         try {
             InputStream inputStream = this.socket.getInputStream();
             OutputStream outputStream = this.socket.getOutputStream();
@@ -30,14 +33,11 @@ public class Session implements Runnable {
             {
                 inMsg = dataInputStream.readUTF();
 
-                if (inMsg.equals("exit") )
-                {
-                    System.out.println("Client #" + this.id + " has gone.");
-                    break;
-                }
+                if (inMsg.equals("exit") ) break;
+
                 System.out.println("Client #" + this.id + ": " + inMsg);
 
-                dataOutputStream.writeUTF("success");
+                dataOutputStream.writeUTF(server.SERVER_SUCCES_MESSAGE);
                 dataOutputStream.flush();
 
             }
@@ -45,7 +45,9 @@ public class Session implements Runnable {
             System.out.println("Client #" + this.id + " connection aborted.");
         } finally {
             System.out.println("Client #" + this.id + " session finished.");
-            server.threadStop();
+            server.threadStop(id);
         }
     }
+
+
 }
