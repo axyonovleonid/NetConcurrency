@@ -19,7 +19,6 @@ public class Channel {
                 try {
                     lock.wait();
                 }
-                
                 catch (InterruptedException e){
                     System.err.println (e);
                 }
