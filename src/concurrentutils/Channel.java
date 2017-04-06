@@ -1,19 +1,20 @@
+package concurrentutils;
+
 import java.util.LinkedList;
 
 /**
  * Created by лёня on 02.04.2017.
  */
-public class Channel {
+public class Channel<T>{
     private final int maxSize;
-    private final LinkedList<Runnable> queue = new LinkedList<>();
+    private final LinkedList<T> queue = new LinkedList<>();
     private final Object lock = new Object();
-    private Runnable x;
 
     public Channel(int maxSize) {
         this.maxSize = maxSize;
     }
-    void put(Runnable x) throws InterruptedException{
-        this.x = x;
+    void put(T x) {
+        T x1 = x;
         synchronized (lock) {
             while (queue.size() == maxSize)
                 try {
@@ -22,17 +23,25 @@ public class Channel {
                 catch (InterruptedException e){
                     System.err.println (e);
                 }
-            queue.addLast(x);
+            queue.addLast(x1);
             lock.notifyAll();
         }
     }
-    Runnable take() {
+    T take() {
         synchronized (lock) {
             while (queue.isEmpty())
                 try { lock.wait(); }
-                catch (InterruptedException e) {}
+                catch (InterruptedException e) {
+                    System.out.println(e);
+                }
             lock.notifyAll();
             return queue.removeFirst();
+        }
+    }
+
+    public boolean isEmpty () {
+        synchronized (lock) {
+            return queue.isEmpty ();
         }
     }
 }

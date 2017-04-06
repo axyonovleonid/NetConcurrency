@@ -1,12 +1,13 @@
-/**
+package app; /**
  * Created by лёня on 28.03.2017.
  */
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketException;
 
 
 public class Client {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
         String host = args[0];
         int port = Integer.parseInt(args[1]);
@@ -26,17 +27,21 @@ public class Client {
             String inMsg;
 
             while (true) {
-                outMsg = bufferedReader.readLine();
+                try{
+                    outMsg = bufferedReader.readLine();
 
-                dataOutputStream.writeUTF(outMsg);
-                dataOutputStream.flush();
 
-                inMsg = dataInputStream.readUTF();
-                System.out.println(inMsg);
+                    dataOutputStream.writeUTF(outMsg);
+                    dataOutputStream.flush();
+
+                    inMsg = dataInputStream.readUTF();
+                    System.out.println(inMsg);
+                }
+                catch (SocketException e){
+                    e.printStackTrace();
+                }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (IllegalArgumentException str){
+        }  catch (IllegalArgumentException str){
             System.err.print("Illegal port");
         }
     }

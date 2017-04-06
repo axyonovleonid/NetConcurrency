@@ -1,3 +1,7 @@
+package netutils;
+
+import app.Server;
+
 import java.io.*;
 import java.net.Socket;
 
@@ -5,17 +9,13 @@ import java.net.Socket;
  * Created by лёня on 31.03.2017.
  */
 public class Session implements Runnable {
-    private Server server;
-    private Socket socket;
-    private int id;
-    public Session(Server server, Socket socket, int id) {
+    private final Socket socket;
+    private final int id;
+    private MessageHandler classMH;
+    public Session (Socket socket, int id, MessageHandler classMH) {
         this.socket = socket;
-        this.server = server;
         this.id = id;
-    }
-
-    public int getId () {
-        return id;
+        this.classMH = classMH;
     }
 
     @Override
@@ -35,9 +35,9 @@ public class Session implements Runnable {
 
                 if (inMsg.equals("exit") ) break;
 
-                System.out.println("Client #" + this.id + ": " + inMsg);
+                classMH.handle ("Client #" + this.id + ": " + inMsg);
 
-                dataOutputStream.writeUTF(server.SERVER_SUCCES_MESSAGE);
+                dataOutputStream.writeUTF(Server.SERVER_SUCCESS_MESSAGE);
                 dataOutputStream.flush();
 
             }
@@ -45,7 +45,7 @@ public class Session implements Runnable {
             System.out.println("Client #" + this.id + " connection aborted.");
         } finally {
             System.out.println("Client #" + this.id + " session finished.");
-            server.threadStop(id);
+
         }
     }
 
