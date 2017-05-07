@@ -29,4 +29,10 @@ public class ThreadPool {
     public void onTaskCompleted (WorkerThread workerThread) {
         freeWorkers.put (workerThread);
     }
+
+    public void stop () {
+        for (WorkerThread wt : allWorkers) {
+            wt.stop();
+        }
+    }
 }

@@ -4,7 +4,6 @@ package netutils; /**
 import concurrentutils.Channel;
 import concurrentutils.ThreadPool;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -16,6 +15,8 @@ public class Host {
     private static final Object lock = new Object ();
     private ThreadPool threadPool;
     MessageHandler classMH;
+    private boolean isAlive;
+
     public Host (int port, Channel<Session> channel, ThreadPool threadPool, MessageHandlerFactory classMHF){
         this.port = port;
         this.channel = channel;
@@ -27,11 +28,11 @@ public class Host {
     public void run(){
         try {
             ServerSocket serverSocket = new ServerSocket (port);
-
+            isAlive = true;
             int sessionID = -1;
-            while (true) try {
+
+            while (isAlive) try {
                 Socket socket = serverSocket.accept ();
-                DataOutputStream dataOutputStream = new DataOutputStream (socket.getOutputStream ());
 
                 synchronized (lock) {
                     Session session = new Session (socket, ++sessionID, classMH);
@@ -62,4 +63,7 @@ public class Host {
         }
     }
 
+    public void stop () {
+        isAlive = false;
+    }
 }

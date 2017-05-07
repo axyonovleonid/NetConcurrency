@@ -7,9 +7,12 @@ class WorkerThread implements Runnable {
     private final ThreadPool threadPool;
     private Runnable currentTask = null;
     private final Object lock = new Object();
+    private boolean isAlive;
+    Thread thread;
     public WorkerThread(ThreadPool threadPool) {
         this.threadPool = threadPool;
-        new Thread(this).start();
+        thread = new Thread(this);
+        thread.start();
     }
     public void run() {
         synchronized (lock) {
@@ -29,10 +32,18 @@ class WorkerThread implements Runnable {
             }
         }
     }
-    public void execute(Runnable task) {
+    void execute (Runnable task) {
         synchronized (lock) {
             currentTask = task;
             lock.notifyAll();
+        }
+    }
+
+    public void stop() {
+        if (isAlive) {
+            isAlive = false;
+            while (null != currentTask);
+            thread.interrupt();
         }
     }
 }

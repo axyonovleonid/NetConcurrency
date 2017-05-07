@@ -1,9 +1,14 @@
 package app; /**
  * Created by лёня on 28.03.2017.
  */
+
+import database.Teacher;
+
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class Client {
@@ -20,14 +25,15 @@ public class Client {
 
             DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
             DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
-
+//            ObjectInputStream objectInputStream = new ObjectInputStream (socket.getInputStream ());
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
 
             String outMsg;
             String inMsg;
 
-            while (true) {
-                try{
+            List<Teacher> teachers = new ArrayList<> ();
+            try{
+                while (true) {
                     outMsg = bufferedReader.readLine();
 
 
@@ -36,10 +42,12 @@ public class Client {
 
                     inMsg = dataInputStream.readUTF();
                     System.out.println(inMsg);
-                }
-                catch (SocketException e){
-                    e.printStackTrace();
-                }
+
+                    }
+            }
+            catch (SocketException e){
+                e.printStackTrace();
+                System.out.print (teachers);
             }
         }  catch (IllegalArgumentException str){
             System.err.print("Illegal port");
