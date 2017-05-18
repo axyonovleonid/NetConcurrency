@@ -11,4 +11,9 @@ public class PrintMessageHandler implements MessageHandler {
     public void handle (String message) {
         System.out.println (message);
     }
+    @Override
+    public Object handleCommand (String message) {
+        return message;
+    }
+
 }

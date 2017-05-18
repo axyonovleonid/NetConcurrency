@@ -24,30 +24,50 @@ public class Client {
             Socket socket = new Socket(host, port);
 
             DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
-            DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
-//            ObjectInputStream objectInputStream = new ObjectInputStream (socket.getInputStream ());
+//            DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
+            ObjectInputStream objectInputStream = new ObjectInputStream (socket.getInputStream ());
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
 
-            String outMsg;
+            String outMsg = "";
             String inMsg;
 
             List<Teacher> teachers = new ArrayList<> ();
             try{
-                while (true) {
+                while (!outMsg.equals ("exit")) {
                     outMsg = bufferedReader.readLine();
+                    if(!outMsg.isEmpty()) {
+                        dataOutputStream.writeUTF (outMsg);
+                        System.out.println ("Send!");
 
 
-                    dataOutputStream.writeUTF(outMsg);
-                    dataOutputStream.flush();
 
-                    inMsg = dataInputStream.readUTF();
-                    System.out.println(inMsg);
-
+                        int size = (int) objectInputStream.readObject ();
+                        if(size == -222) {
+                            System.out.println((String) objectInputStream.readObject());
+                        }
+                        else if(size == -404){
+                            System.out.println("Error");
+                        }
+                        while(size > 0) {
+                            try {
+                                  Teacher tc = (Teacher) objectInputStream.readObject ();
+                                  System.out.println(tc);
+                                  size--;
+                            } catch (ClassNotFoundException | IOException e) {
+                                e.printStackTrace ();
+                                System.out.println("end of stream");
+                                break;
+                            }
+                        }
                     }
+                }
+                System.out.println("List of teacher's:");
+                System.out.println (teachers.toString ());
             }
             catch (SocketException e){
-                e.printStackTrace();
-                System.out.print (teachers);
+                System.out.println ("Server's disconnected");
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace ();
             }
         }  catch (IllegalArgumentException str){
             System.err.print("Illegal port");

@@ -1,10 +1,14 @@
 package netutils;
 
-import app.Server;
-import database.DataBaseCommandExecutor;
+import database.Teacher;
 
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by лёня on 31.03.2017.
@@ -13,7 +17,7 @@ public class Session implements Runnable {
     private final Socket socket;
     private final int id;
     private MessageHandler classMH;
-    private DataBaseCommandExecutor dbce;
+
     public Session (Socket socket, int id, MessageHandler classMH) {
         this.socket = socket;
         this.id = id;
@@ -24,28 +28,45 @@ public class Session implements Runnable {
     public void run() {
         try {
             InputStream inputStream = this.socket.getInputStream();
-            OutputStream outputStream = this.socket.getOutputStream();
-  //          ObjectOutputStream objectOutputStream = new ObjectOutputStream (socket.getOutputStream ());
+  //          OutputStream outputStream = this.socket.getOutputStream();
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream (socket.getOutputStream ());
             DataInputStream dataInputStream = new DataInputStream(inputStream);
-            DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
+ //           DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
 
-            dbce = new DataBaseCommandExecutor ("localhost", 3306, "root",
-                    "root", "teachers", classMH);
             String inMsg;
             while (true)
             {
                 inMsg = dataInputStream.readUTF();
-
-                if (inMsg.equals("exit") )
+                if (inMsg.equals("exit") ){
+                    classMH.handle (inMsg);
                     break;
+                }
 
-                classMH.handle ("Client #" + this.id + ": " + inMsg);
+                if (!inMsg.isEmpty ()) {
+                    classMH.handle ("Client #" + this.id + ": " + inMsg);
+                    Object obj = classMH.handleCommand (inMsg);
 
-                dataOutputStream.writeUTF(Server.SERVER_SUCCESS_MESSAGE);
-                dataOutputStream.flush();
- //               objectOutputStream.writeObject (teachers.get(0));
- //               objectOutputStream.flush ();
-
+                    if(obj.getClass ().toString ().equals ("class java.util.ArrayList")) {
+                        List<Teacher> teacherList = (ArrayList<Teacher>) obj;
+                        objectOutputStream.writeObject (teacherList.size ());
+                        if(teacherList.size () != 0){
+                            for(Teacher tc:teacherList){
+                                classMH.handle (tc.toString ());
+                                objectOutputStream.writeObject (tc);
+                                objectOutputStream.flush();
+                            }
+                        }
+                    }
+                    else if(obj.getClass ().toString ().equals ("class java.lang.String")){
+                        String res = (String) obj;
+                        objectOutputStream.writeObject(-222);
+                        objectOutputStream.writeObject (res);
+                    }
+                    else {
+                        objectOutputStream.writeObject(-404);
+                        classMH.handle ("Client #" + this.id + ": Error");
+                    }
+                }
             }
         } catch (IOException e) {
             System.out.println("Client #" + this.id + " connection aborted.");

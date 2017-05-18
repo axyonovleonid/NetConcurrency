@@ -1,7 +1,5 @@
 package database;
 
-import netutils.MessageHandler;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,12 +11,10 @@ import java.util.List;
 public class DataBaseCommandExecutor {
     private String url, login, password;
     private Connection con;
-    private MessageHandler classMH;
-    public DataBaseCommandExecutor(String host, int port, String login, String pass, String dbname, MessageHandler cmh){
+
+    public DataBaseCommandExecutor(String host, int port, String login, String pass, String dbname){
         try {
             this.url = "jdbc:mysql://"+host+":"+port+"/"+dbname;
-            this.classMH = cmh;
-//           this.url = "jdbc:mysql://localhost:3306/teachers";
             this.login = login;
             this.password = pass;
             con = DriverManager.getConnection(url, this.login, password);
@@ -35,7 +31,7 @@ public class DataBaseCommandExecutor {
         }
     }
 
-    public List<Teacher> execute(String command){
+    public List<Teacher> searchTeacher(String command){
         Statement stmt;
         List<Teacher> teachers = new ArrayList<> ();
         try {
@@ -47,19 +43,18 @@ public class DataBaseCommandExecutor {
             while (rs.next()) {
                 String name = rs.getString("teacher_name");
 
-                String univ_id = rs.getString ("teacher_univ_id");
                 String post_id = rs.getString ("teacher_post_id");
                 String fac_id = rs.getString ("teacher_fac_id");
 
-                double x = Double.parseDouble (rs.getString ("teacher_x_coordinate"));
-                double y = Double.parseDouble (rs.getString ("teacher_y_coordinate"));
+                double x = rs.getDouble ("teacher_x_coordinate");
+                double y = rs.getDouble ("teacher_y_coordinate");
 
                 Statement stmt2 = con.createStatement();
                 Statement stmt3 = con.createStatement();
                 Statement stmt4 = con.createStatement();
 
-                ResultSet rs2 = stmt2.executeQuery ("SELECT univ_name FROM universities WHERE univ_id = \""
-                        +univ_id+"\"");
+                ResultSet rs2 = stmt2.executeQuery ("SELECT  univ_name FROM universities WHERE univ_id = " +
+                        "(SELECT univ_id FROM faculty WHERE fac_id = \"" + fac_id + "\"" + ")");
                 rs2.next();
 
                 ResultSet rs3 = stmt3.executeQuery ("SELECT fac_name FROM faculty WHERE fac_id = \""
@@ -91,7 +86,43 @@ public class DataBaseCommandExecutor {
         return teachers;
     }
 
-    public String getUrl(){
+    public String checkCoord(String command){
+        Statement stmt;
+
+        try {
+
+            stmt = con.createStatement ();
+            Statement stmt2 = con.createStatement();
+
+            ResultSet rs = stmt.executeQuery ("SELECT * FROM teacher WHERE teacher_name  LIKE \'%" + command + "%\'");
+            if(!rs.isBeforeFirst ())
+                throw new SQLException ();
+            rs.next ();
+
+            double x = rs.getDouble ("teacher_x_coordinate");
+            double y = rs.getDouble ("teacher_y_coordinate");
+
+            ResultSet rs2 = stmt2.executeQuery ("SELECT coord_name FROM coordinates WHERE coord_right_x > " + x + " AND coord_left_x < " + x + " AND coord_top_y > " + y + " AND coord_bot_y < " + y);
+
+            if (!rs2.isBeforeFirst() ) {
+                return "You can call teacher";
+            }
+            rs2.next ();
+
+            String place = rs2.getString ("coord_name");
+
+            rs.close();
+            rs2.close();
+            stmt.close();
+            stmt2.close();
+            return "You can't call teacher. He/she is in " + place;
+
+        } catch (SQLException e) {
+            return "No teachers with this name";
+        }
+    }
+
+    private String getUrl(){
         return url;
     }
 

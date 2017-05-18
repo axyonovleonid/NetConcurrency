@@ -5,4 +5,5 @@ package netutils;
  */
 public interface MessageHandler {
     void handle(String message);
+    Object handleCommand(String message);
 }

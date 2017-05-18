@@ -8,8 +8,8 @@ class WorkerThread implements Runnable {
     private Runnable currentTask = null;
     private final Object lock = new Object();
     private boolean isAlive;
-    Thread thread;
-    public WorkerThread(ThreadPool threadPool) {
+    private Thread thread;
+    WorkerThread (ThreadPool threadPool) {
         this.threadPool = threadPool;
         thread = new Thread(this);
         thread.start();
@@ -21,7 +21,9 @@ class WorkerThread implements Runnable {
                     while (currentTask == null)
                         try {
                             lock.wait();
-                        } catch (InterruptedException e) {}
+                        } catch (InterruptedException e) {
+                            e.printStackTrace ();
+                        }
                     currentTask.run();
                     currentTask = null;
                 } catch (Exception e) {
@@ -39,7 +41,7 @@ class WorkerThread implements Runnable {
         }
     }
 
-    public void stop() {
+    void stop () {
         if (isAlive) {
             isAlive = false;
             while (null != currentTask);
